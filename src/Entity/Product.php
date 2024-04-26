@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ProductRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -25,6 +27,17 @@ class Product
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
+
+    /**
+     * @var Collection<int, Purchaseline>
+     */
+    #[ORM\OneToMany(targetEntity: Purchaseline::class, mappedBy: 'product')]
+    private Collection $purchaselines;
+
+    public function __construct()
+    {
+        $this->purchaselines = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -75,6 +88,36 @@ class Product
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Purchaseline>
+     */
+    public function getPurchaselines(): Collection
+    {
+        return $this->purchaselines;
+    }
+
+    public function addPurchaseline(Purchaseline $purchaseline): static
+    {
+        if (!$this->purchaselines->contains($purchaseline)) {
+            $this->purchaselines->add($purchaseline);
+            $purchaseline->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removePurchaseline(Purchaseline $purchaseline): static
+    {
+        if ($this->purchaselines->removeElement($purchaseline)) {
+            // set the owning side to null (unless already changed)
+            if ($purchaseline->getProduct() === $this) {
+                $purchaseline->setProduct(null);
+            }
+        }
 
         return $this;
     }
